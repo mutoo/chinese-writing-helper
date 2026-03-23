@@ -67,6 +67,23 @@ app.innerHTML = `
         </div>
       </section>
     </main>
+
+    <footer class="site-footer">
+      <p>
+        GitHub:
+        <a href="https://github.com/mutoo/chinese-writing-helper" target="_blank" rel="noreferrer">
+          mutoo/chinese-writing-helper
+        </a>
+      </p>
+      <p>
+        Credits:
+        本项目的拼音、笔画、笔顺动画与语音能力基于
+        <a href="https://theajack.github.io/cnchar/" target="_blank" rel="noreferrer">
+          cnchar
+        </a>
+        及其插件实现。
+      </p>
+    </footer>
   </div>
 `;
 
@@ -139,7 +156,7 @@ function getStrokeNames(char) {
 function pickStrokeNameVariant(name) {
   if (!name) return '';
   const variants = String(name)
-    .split(/[\/／]/)
+    .split(/[\/／\|]/)
     .map((item) => item.trim())
     .filter(Boolean);
   if (!variants.length) return String(name);
