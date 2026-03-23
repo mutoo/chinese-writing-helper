@@ -31,3 +31,7 @@ npm run dev
 ## 依赖说明
 
 项目使用 Vite 作为开发服务器与打包工具，页面通过 CDN 引入 `cnchar` 及其 `poly`、`order`、`draw`、`voice` 插件。
+
+## Credits
+
+本项目的拼音、笔画、笔顺动画与语音相关能力基于 [cnchar](https://theajack.github.io/cnchar/) 及其插件实现。感谢 `cnchar` 开源项目提供的中文处理能力支持。
