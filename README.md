@@ -1,5 +1,7 @@
 # 曦仔汉字书写助手
 
+[![Vibe coding with Codex](https://img.shields.io/badge/Vibe%20coding%20with-Codex-0F172A?style=flat-square)](https://openai.com/codex/)
+
 一个极简 web app，用来把一句中文拆成单字，展示拼音，并播放单字或整句的笔顺动画。
 
 ## 本地运行

@@ -76,6 +76,12 @@ app.innerHTML = `
         </a>
       </p>
       <p>
+        Support:
+        <a href="https://buymeacoffee.com/mutoo" target="_blank" rel="noreferrer">
+          buymeacoffee.com/mutoo
+        </a>
+      </p>
+      <p>
         Credits:
         本项目的拼音、笔画、笔顺动画与语音能力基于
         <a href="https://theajack.github.io/cnchar/" target="_blank" rel="noreferrer">
@@ -106,6 +112,8 @@ const SENTENCE_CHARACTER_PAUSE_MS = 700;
 const SPEECH_RATE = 0.75;
 const CHARACTER_NAME_LEAD_MS = 450;
 const STROKE_STEP_MS = 900;
+const WRITER_READY_RETRY_MS = 120;
+const WRITER_READY_MAX_RETRIES = 25;
 
 const elements = {
   sentenceInput: document.querySelector('#sentenceInput'),
@@ -279,6 +287,57 @@ function createWriter(currentChar, mode = 'step', animateComplete) {
   });
 }
 
+function wait(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+function isWriterMounted(writer) {
+  return Boolean(writer && Array.isArray(writer.writers) && writer.writers.length > 0);
+}
+
+async function waitForWriterReady(runId, writer, retryCount = WRITER_READY_MAX_RETRIES) {
+  for (let attempt = 0; attempt < retryCount; attempt += 1) {
+    if (runId !== state.playbackRunId) return false;
+    if (writer !== state.writer) return false;
+    if (isWriterMounted(writer)) return true;
+    await wait(WRITER_READY_RETRY_MS);
+  }
+  return false;
+}
+
+async function drawNextStrokeSafely(runId, writer) {
+  for (let attempt = 0; attempt < WRITER_READY_MAX_RETRIES; attempt += 1) {
+    if (runId !== state.playbackRunId) return false;
+    if (writer !== state.writer) return false;
+
+    try {
+      return await new Promise((resolve) => {
+        const hasMore = writer.drawNextStroke(() => {
+          resolve(hasMore);
+        });
+
+        if (!hasMore) {
+          resolve(false);
+        }
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const looksLikeStrokeDataNotReady =
+        error instanceof TypeError && message.includes('strokes');
+
+      if (!looksLikeStrokeDataNotReady) {
+        throw error;
+      }
+
+      await wait(WRITER_READY_RETRY_MS);
+    }
+  }
+
+  return false;
+}
+
 function renderCurrentCharacter() {
   if (!state.characters.length || !window.cnchar || !window.cnchar.draw) {
     clearWriter();
@@ -314,7 +373,7 @@ function moveCharacter(delta) {
   setCurrentIndex(nextIndex, { autoSpeak: true });
 }
 
-function playCharacterStrokeByStroke(index, options = {}) {
+async function playCharacterStrokeByStroke(index, options = {}) {
   const current = state.characters[index];
   if (!current) return;
 
@@ -322,11 +381,15 @@ function playCharacterStrokeByStroke(index, options = {}) {
   state.currentIndex = index;
   renderCurrentCharacter();
   speakText(current.char);
+  const writer = state.writer;
 
   const strokeNames = current.strokeNames || [];
   const onComplete = options.onComplete || (() => {});
 
-  const playStroke = (strokeIndex) => {
+  const ready = await waitForWriterReady(runId, writer);
+  if (!ready) return;
+
+  const playStroke = async (strokeIndex) => {
     if (runId !== state.playbackRunId) return;
 
     if (strokeIndex >= strokeNames.length) {
@@ -339,19 +402,22 @@ function playCharacterStrokeByStroke(index, options = {}) {
       speakText(pickStrokeNameVariant(strokeName));
     }
 
-    window.setTimeout(() => {
-      if (runId !== state.playbackRunId || !state.writer) return;
-      state.writer.drawNextStroke();
-      window.setTimeout(() => {
-        playStroke(strokeIndex + 1);
-      }, STROKE_STEP_MS);
-    }, 160);
+    await wait(160);
+    const hasMore = await drawNextStrokeSafely(runId, writer);
+    if (runId !== state.playbackRunId) return;
+
+    if (!hasMore) {
+      onComplete();
+      return;
+    }
+
+    await wait(STROKE_STEP_MS);
+    playStroke(strokeIndex + 1);
   };
 
-  window.setTimeout(() => {
-    if (runId !== state.playbackRunId) return;
-    playStroke(0);
-  }, options.characterLead ?? CHARACTER_NAME_LEAD_MS);
+  await wait(options.characterLead ?? CHARACTER_NAME_LEAD_MS);
+  if (runId !== state.playbackRunId) return;
+  playStroke(0);
 }
 
 function playCurrentCharacter() {
@@ -555,13 +621,22 @@ function bindEvents() {
     if (nextStrokeName) {
       speakText(pickStrokeNameVariant(nextStrokeName));
     }
-    const hasMore = state.writer.drawNextStroke();
-    if (current) {
-      current.manualStrokeIndex = hasMore ? (current.manualStrokeIndex || 0) + 1 : 0;
-    }
-    if (!hasMore) {
-      createWriter(state.characters[state.currentIndex].char, 'step');
-    }
+
+    const runId = ++state.playbackRunId;
+    const writer = state.writer;
+
+    waitForWriterReady(runId, writer).then(async (ready) => {
+      if (!ready) return;
+      const hasMore = await drawNextStrokeSafely(runId, writer);
+      if (current) {
+        current.manualStrokeIndex = hasMore ? (current.manualStrokeIndex || 0) + 1 : 0;
+      }
+      if (!hasMore) {
+        createWriter(state.characters[state.currentIndex].char, 'step');
+      }
+    }).catch((error) => {
+      console.error('Failed to draw next stroke:', error);
+    });
   });
 
   elements.playCharacterButton.addEventListener('click', () => {
