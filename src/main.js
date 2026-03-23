@@ -313,15 +313,26 @@ async function drawNextStrokeSafely(runId, writer) {
     if (writer !== state.writer) return false;
 
     try {
-      return await new Promise((resolve) => {
-        const hasMore = writer.drawNextStroke(() => {
-          resolve(hasMore);
+      const advanced = await new Promise((resolve) => {
+        let settled = false;
+        const finish = (value) => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+
+        const started = writer.drawNextStroke(() => {
+          finish(true);
         });
 
-        if (!hasMore) {
-          resolve(false);
+        if (!started) {
+          finish(false);
         }
       });
+
+      if (advanced) {
+        return true;
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const looksLikeStrokeDataNotReady =
@@ -331,8 +342,9 @@ async function drawNextStrokeSafely(runId, writer) {
         throw error;
       }
 
-      await wait(WRITER_READY_RETRY_MS);
     }
+
+    await wait(WRITER_READY_RETRY_MS);
   }
 
   return false;
@@ -403,21 +415,25 @@ async function playCharacterStrokeByStroke(index, options = {}) {
     }
 
     await wait(160);
-    const hasMore = await drawNextStrokeSafely(runId, writer);
+    const advanced = await drawNextStrokeSafely(runId, writer);
     if (runId !== state.playbackRunId) return;
 
-    if (!hasMore) {
+    if (!advanced) {
+      return;
+    }
+
+    if (strokeIndex >= strokeNames.length - 1) {
       onComplete();
       return;
     }
 
     await wait(STROKE_STEP_MS);
-    playStroke(strokeIndex + 1);
+    await playStroke(strokeIndex + 1);
   };
 
   await wait(options.characterLead ?? CHARACTER_NAME_LEAD_MS);
   if (runId !== state.playbackRunId) return;
-  playStroke(0);
+  await playStroke(0);
 }
 
 function playCurrentCharacter() {
