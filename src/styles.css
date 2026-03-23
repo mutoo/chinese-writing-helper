@@ -1,0 +1,338 @@
+:root {
+  --bg: #f6efe3;
+  --panel: rgba(255, 250, 242, 0.9);
+  --panel-strong: #fffdf8;
+  --ink: #1f1a17;
+  --muted: #6f645d;
+  --line: rgba(93, 70, 52, 0.15);
+  --primary: #d85a3f;
+  --primary-strong: #b94731;
+  --accent: #2c7a7b;
+  --shadow: 0 18px 45px rgba(68, 43, 24, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Noto Sans SC", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(216, 90, 63, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(44, 122, 123, 0.15), transparent 22%),
+    linear-gradient(180deg, #f8f1e7 0%, #f3eadb 100%);
+  min-height: 100vh;
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1180px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 28px 0 40px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--primary-strong);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.hero h1 {
+  margin: 0;
+  font-family: "Ma Shan Zheng", cursive;
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  line-height: 1;
+}
+
+.hero-copy {
+  max-width: 42rem;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.hero-card,
+.panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+}
+
+.hero-card {
+  border-radius: 24px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background:
+    linear-gradient(135deg, rgba(216, 90, 63, 0.16), rgba(255, 255, 255, 0.78)),
+    var(--panel-strong);
+}
+
+.hero-label {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.hero-card strong {
+  margin: 10px 0 4px;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 20px;
+}
+
+.panel {
+  border-radius: 26px;
+  padding: 22px;
+}
+
+.viewer-panel {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.panel-title,
+.panel-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.input-row {
+  margin-top: 14px;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 110px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--ink);
+}
+
+.action-row,
+.sentence-actions,
+.viewer-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.secondary {
+  background: #efe1cf;
+  color: var(--ink);
+}
+
+.accent {
+  background: var(--accent);
+  color: #fff;
+}
+
+.status-text {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+
+.panel-head,
+.viewer-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.badge,
+.meta-card {
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid var(--line);
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.character-list {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 12px;
+}
+
+.character-chip {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.character-chip.active {
+  background: rgba(216, 90, 63, 0.14);
+  border-color: rgba(216, 90, 63, 0.35);
+  transform: translateY(-2px);
+}
+
+.character-chip .pinyin-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.character-chip .char-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 2rem;
+  color: var(--ink);
+  font-family: "Ma Shan Zheng", cursive;
+}
+
+.current-pinyin {
+  margin: 0;
+  color: var(--accent);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.current-character {
+  margin: 2px 0 0;
+  font-size: clamp(4rem, 10vw, 7rem);
+  line-height: 1;
+  font-family: "Ma Shan Zheng", cursive;
+  font-weight: 400;
+}
+
+.meta-card {
+  min-width: 150px;
+  border-radius: 20px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.writer-surface {
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 28px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.92)),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 47%,
+      rgba(111, 100, 93, 0.08) 47%,
+      rgba(111, 100, 93, 0.08) 53%,
+      transparent 53%,
+      transparent 100%
+    );
+}
+
+.writer-box {
+  width: min(100%, 460px);
+  min-height: min(64vw, 460px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.swipe-hint {
+  margin: 10px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 960px) {
+  .hero,
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .viewer-panel {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    width: min(100vw - 20px, 100%);
+    padding-top: 18px;
+  }
+
+  .panel,
+  .hero-card {
+    border-radius: 22px;
+    padding: 18px;
+  }
+
+  .character-list {
+    grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  }
+
+  .writer-box {
+    width: min(100%, 72vw);
+    min-height: min(72vw, 380px);
+  }
+}
