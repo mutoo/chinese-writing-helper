@@ -27,6 +27,13 @@ app.innerHTML = `
         <div class="action-row">
           <button id="listenButton" class="secondary">语音输入</button>
           <button id="analyzeButton" class="primary">拆成单字</button>
+          <select id="voiceSelect" class="secondary" style="margin-left: 8px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-base);">
+            <option value="zh-CN-XiaoxiaoNeural">晓晓 (女声/推荐)</option>
+            <option value="zh-CN-YunxiNeural">云希 (阳光男声)</option>
+            <option value="zh-CN-YunjianNeural">云健 (体育男声)</option>
+            <option value="zh-CN-YunxiaNeural">云夏 (可爱男童)</option>
+            <option value="zh-CN-XiaoyiNeural">晓伊 (活泼女声)</option>
+          </select>
         </div>
         <p id="statusText" class="status-text">支持系统语音输入；如果浏览器允许，也可以直接点“语音输入”。</p>
       </section>
@@ -120,6 +127,7 @@ const elements = {
   sentenceInput: document.querySelector('#sentenceInput'),
   analyzeButton: document.querySelector('#analyzeButton'),
   listenButton: document.querySelector('#listenButton'),
+  voiceSelect: document.querySelector('#voiceSelect'),
   playSentenceButton: document.querySelector('#playSentenceButton'),
   prevCharacterButton: document.querySelector('#prevCharacterButton'),
   nextCharacterButton: document.querySelector('#nextCharacterButton'),
@@ -174,9 +182,9 @@ function pickStrokeNameVariant(name) {
 
 function speakText(text) {
   if (!text) return;
-  // Call the new Edge TTS fetch method directly
-  // It handles its own fallback if worker API fails
-  speak(text);
+  // Get voice from selector, fallback to undefined so tts.js uses its default
+  const voice = elements.voiceSelect ? elements.voiceSelect.value : undefined;
+  speak(text, voice);
 }
 
 function updateStatus(message) {

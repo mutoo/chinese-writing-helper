@@ -197,7 +197,11 @@ async function getVoice(text, voiceName, rate, pitch, style, role, styleDegree, 
   }
 
   return new Response(new Blob(audioChunks, { type: "audio/mpeg" }), {
-    headers: { "Content-Type": "audio/mpeg", "Access-Control-Allow-Origin": "*" },
+    headers: { 
+      "Content-Type": "audio/mpeg", 
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "public, max-age=86400"
+    },
   });
 }
 
