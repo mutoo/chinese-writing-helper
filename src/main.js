@@ -1,4 +1,5 @@
 import './styles.css';
+import { speak, cancelSpeech } from './tts.js';
 
 const app = document.querySelector('#app');
 
@@ -173,19 +174,9 @@ function pickStrokeNameVariant(name) {
 
 function speakText(text) {
   if (!text) return;
-
-  if (window.cnchar && window.cnchar.voice && typeof window.cnchar.voice.speak === 'function') {
-    window.cnchar.voice.speak(text, { rate: SPEECH_RATE });
-    return;
-  }
-
-  if ('speechSynthesis' in window) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
-    utterance.rate = SPEECH_RATE;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }
+  // Call the new Edge TTS fetch method directly
+  // It handles its own fallback if worker API fails
+  speak(text);
 }
 
 function updateStatus(message) {
@@ -392,7 +383,7 @@ async function playCharacterStrokeByStroke(index, options = {}) {
   const runId = ++state.playbackRunId;
   state.currentIndex = index;
   renderCurrentCharacter();
-  speakText(current.char);
+  if (!options.mute) speakText(current.char);
   const writer = state.writer;
 
   const strokeNames = current.strokeNames || [];
@@ -410,7 +401,7 @@ async function playCharacterStrokeByStroke(index, options = {}) {
     }
 
     const strokeName = strokeNames[strokeIndex];
-    if (strokeName) {
+    if (strokeName && !options.mute) {
       speakText(pickStrokeNameVariant(strokeName));
     }
 
@@ -457,6 +448,7 @@ function playSentenceFrom(index) {
   }
 
   playCharacterStrokeByStroke(index, {
+    mute: true, // 播放整句时静音各个单字和笔画的报读
     onComplete: () => {
       if (!state.sentencePlayback) return;
       window.setTimeout(() => {
@@ -670,6 +662,8 @@ function bindEvents() {
 
     state.sentencePlayback = true;
     elements.playSentenceButton.textContent = '停止整句播放';
+    // 开始连续播放时，直接用高品质 TTS 连贯朗读整句
+    speakText(state.sentence);
     playSentenceFrom(0);
   });
 
