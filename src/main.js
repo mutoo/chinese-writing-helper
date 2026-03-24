@@ -675,6 +675,15 @@ function bindEvents() {
     playSentenceFrom(0);
   });
 
+  if (elements.voiceSelect) {
+    elements.voiceSelect.addEventListener('change', (event) => {
+      const voice = event.target.value;
+      // 停止当前可能的整句或笔顺朗读
+      stopSentencePlayback();
+      speak('您好，我是曦仔，这是当前语音风格的试听效果。', voice);
+    });
+  }
+
   elements.sentenceInput.addEventListener('keydown', (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
       analyzeSentence();
