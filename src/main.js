@@ -622,6 +622,17 @@ function bindSwipe() {
 function bindEvents() {
   elements.analyzeButton.addEventListener('click', analyzeSentence);
   elements.listenButton.addEventListener('click', startRecognition);
+
+  if (elements.voiceSelect) {
+    elements.voiceSelect.addEventListener('change', (e) => {
+      stopSentencePlayback();
+      const option = e.target.options[e.target.selectedIndex];
+      // 提取名字，比如 "晓晓 (女声/推荐)" 会提取出 "晓晓"
+      const name = option.text.split(' ')[0];
+      speakText(`你好，我是${name}。`);
+    });
+  }
+
   elements.prevCharacterButton.addEventListener('click', () => moveCharacter(-1));
   elements.nextCharacterButton.addEventListener('click', () => moveCharacter(1));
   elements.speakCharacterButton.addEventListener('click', () => {
@@ -674,15 +685,6 @@ function bindEvents() {
     speakText(state.sentence);
     playSentenceFrom(0);
   });
-
-  if (elements.voiceSelect) {
-    elements.voiceSelect.addEventListener('change', (event) => {
-      const voice = event.target.value;
-      // 停止当前可能的整句或笔顺朗读
-      stopSentencePlayback();
-      speak('您好，我是曦仔，这是当前语音风格的试听效果。', voice);
-    });
-  }
 
   elements.sentenceInput.addEventListener('keydown', (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
