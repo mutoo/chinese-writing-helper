@@ -1,4 +1,5 @@
 import './styles.css';
+import { speak, cancelSpeech } from './tts.js';
 
 const app = document.querySelector('#app');
 
@@ -26,6 +27,13 @@ app.innerHTML = `
         <div class="action-row">
           <button id="listenButton" class="secondary">语音输入</button>
           <button id="analyzeButton" class="primary">拆成单字</button>
+          <select id="voiceSelect" class="secondary" style="margin-left: 8px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-base);">
+            <option value="zh-CN-XiaoxiaoNeural">晓晓 (女声/推荐)</option>
+            <option value="zh-CN-YunxiNeural">云希 (阳光男声)</option>
+            <option value="zh-CN-YunjianNeural">云健 (体育男声)</option>
+            <option value="zh-CN-YunxiaNeural">云夏 (可爱男童)</option>
+            <option value="zh-CN-XiaoyiNeural">晓伊 (活泼女声)</option>
+          </select>
         </div>
         <p id="statusText" class="status-text">支持系统语音输入；如果浏览器允许，也可以直接点“语音输入”。</p>
       </section>
@@ -119,6 +127,7 @@ const elements = {
   sentenceInput: document.querySelector('#sentenceInput'),
   analyzeButton: document.querySelector('#analyzeButton'),
   listenButton: document.querySelector('#listenButton'),
+  voiceSelect: document.querySelector('#voiceSelect'),
   playSentenceButton: document.querySelector('#playSentenceButton'),
   prevCharacterButton: document.querySelector('#prevCharacterButton'),
   nextCharacterButton: document.querySelector('#nextCharacterButton'),
@@ -173,19 +182,9 @@ function pickStrokeNameVariant(name) {
 
 function speakText(text) {
   if (!text) return;
-
-  if (window.cnchar && window.cnchar.voice && typeof window.cnchar.voice.speak === 'function') {
-    window.cnchar.voice.speak(text, { rate: SPEECH_RATE });
-    return;
-  }
-
-  if ('speechSynthesis' in window) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
-    utterance.rate = SPEECH_RATE;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }
+  // Get voice from selector, fallback to undefined so tts.js uses its default
+  const voice = elements.voiceSelect ? elements.voiceSelect.value : undefined;
+  speak(text, voice);
 }
 
 function updateStatus(message) {
@@ -392,7 +391,7 @@ async function playCharacterStrokeByStroke(index, options = {}) {
   const runId = ++state.playbackRunId;
   state.currentIndex = index;
   renderCurrentCharacter();
-  speakText(current.char);
+  if (!options.mute) speakText(current.char);
   const writer = state.writer;
 
   const strokeNames = current.strokeNames || [];
@@ -410,7 +409,7 @@ async function playCharacterStrokeByStroke(index, options = {}) {
     }
 
     const strokeName = strokeNames[strokeIndex];
-    if (strokeName) {
+    if (strokeName && !options.mute) {
       speakText(pickStrokeNameVariant(strokeName));
     }
 
@@ -457,6 +456,7 @@ function playSentenceFrom(index) {
   }
 
   playCharacterStrokeByStroke(index, {
+    mute: true, // 播放整句时静音各个单字和笔画的报读
     onComplete: () => {
       if (!state.sentencePlayback) return;
       window.setTimeout(() => {
@@ -622,6 +622,17 @@ function bindSwipe() {
 function bindEvents() {
   elements.analyzeButton.addEventListener('click', analyzeSentence);
   elements.listenButton.addEventListener('click', startRecognition);
+
+  if (elements.voiceSelect) {
+    elements.voiceSelect.addEventListener('change', (e) => {
+      stopSentencePlayback();
+      const option = e.target.options[e.target.selectedIndex];
+      // 提取名字，比如 "晓晓 (女声/推荐)" 会提取出 "晓晓"
+      const name = option.text.split(' ')[0];
+      speakText(`你好，我是${name}。`);
+    });
+  }
+
   elements.prevCharacterButton.addEventListener('click', () => moveCharacter(-1));
   elements.nextCharacterButton.addEventListener('click', () => moveCharacter(1));
   elements.speakCharacterButton.addEventListener('click', () => {
@@ -670,6 +681,8 @@ function bindEvents() {
 
     state.sentencePlayback = true;
     elements.playSentenceButton.textContent = '停止整句播放';
+    // 开始连续播放时，直接用高品质 TTS 连贯朗读整句
+    speakText(state.sentence);
     playSentenceFrom(0);
   });
 

@@ -1,2 +1,7 @@
 node_modules/
 dist/
+
+# 忽略讨论用的方案与记录文件
+TTS实现方案.md
+zzz.txt
+.DS_Store
